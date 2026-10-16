@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>ShotCatch sign-in</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; padding: 32px 16px; background: #111; color: #eee; font: 16px/1.5 system-ui, sans-serif; text-align: center; }
+a.button { display: inline-block; margin-top: 16px; padding: 14px 28px; border-radius: 999px; background: #f5b841; color: #111; font-weight: 600; text-decoration: none; }
+p.small { color: #999; font-size: 13px; }
+</style>
+</head>
+<body>
+<!--
+Box only redirects to https URLs, so its sign-in lands here. This page keeps nothing and sends
+nothing anywhere: it passes the reply (code + state, or error) straight to the ShotCatch app.
+The code is useless without the app's client secret and expires within seconds.
+-->
+<p id="msg">Returning to ShotCatch...</p>
+<a class="button" id="open" href="#">Open ShotCatch</a>
+<p class="small">If the app doesn't open, tap the button.</p>
+<script>
+(function () {
+var q = new URLSearchParams(location.search);
+var keep = new URLSearchParams();
+["code", "state", "error", "error_description"].forEach(function (k) {
+if (q.has(k)) keep.set(k, q.get(k));
+});
+var query = keep.toString();
+// intent: opens the app directly in Chrome / Custom Tabs; plain scheme as the fallback
+var intent = "intent://oauth/box?" + query + "#Intent;scheme=com.shotcatch;package=com.shotcatch;end";
+var open = document.getElementById("open");
+open.href = /Android/i.test(navigator.userAgent) ? intent : "com.shotcatch://oauth/box?" + query;
+if (q.has("error")) document.getElementById("msg").textContent = "Sign-in was cancelled or failed. Returning to ShotCatch...";
+// drop the code from the address bar and history
+history.replaceState(null, "", location.pathname);
+location.replace(open.href);
+})();
+</script>
+</body>
+</html>
